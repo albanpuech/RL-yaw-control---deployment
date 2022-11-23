@@ -147,14 +147,11 @@ def test_trad_control(wind_timeseries, wind_timeseries_not_agg,agg, start, end, 
         )
 
     plt.legend()
-    print("---------------")
     plotly_fig = tls.mpl_to_plotly(fig)
-    print("---------------")
-    plotly_fig.write_html("res.html")
+    plotly_fig.write_html("temp/res.html")
 
     # if experiment:
-    #     this_is_a_test = open("res.html").read()
-    #     experiment.log_html(this_is_a_test)
+    #     experiment.log_html(open("temp/res.html").read())
 
     average_yaw_error = (oriented_angle(wind_timeseries["wind_direction"][start:end] - wind_timeseries["nacelle_pos_" + datatype][start:end]).abs().mean())
     nacelle_position_diff = oriented_angle(wind_timeseries["nacelle_pos_" + datatype][start:end].diff(1).dropna())
@@ -211,10 +208,8 @@ def test_model(model,wind_timeseries,start_index,stop_index,ancestors,filter_dur
     ax.plot(range(0,len(env.history["wind_direction"])*10,10),env.history["wind_direction"], label="wind direction (deg)")
     ax.plot(range(0,len(env.history["wind_direction"])*10,10),env.history["yaw angle after actuation"], label="nacelle position (deg)")
     plt.legend()
-    print("---------------")
     plotly_fig = tls.mpl_to_plotly(fig)
-    print("---------------")
-    plotly_fig.write_html("res_model.html")
+    plotly_fig.write_html("temp/res_model.html")
 
 
     average_yaw_error = env.history["yaw error after actuation"].abs().mean()
@@ -224,7 +219,7 @@ def test_model(model,wind_timeseries,start_index,stop_index,ancestors,filter_dur
     time_yawing = get_time_yawing(nacelle_position_diff.to_list())
     
     # if experiment and datatype=='test' :
-    #     experiment.log_html(open("res_model.html").read(), clear=True)
+    #     experiment.log_html(open("temp/res_model.html").read(), clear=True)
         
     if experiment :
         experiment.log_curve(
@@ -309,7 +304,6 @@ class YawEnv(Env):
         )
 
         self.ancestors = ancestors
-        print(self.episode_len, " points in simulation dataset")
         self.action_space = Discrete(3)
 
         # Observation space : Represents environment **after yaw actuation**
@@ -355,7 +349,7 @@ class YawEnv(Env):
         )
 
         self.state = new_state
-        reward = -oriented_angle(self.yaw_angle - self.wind_timeseries["wind_direction"][self.index_wind_timeseries:self.index_wind_timeseries+12].mean()) ** 2     \
+        reward = -abs((self.wind_timeseries["wind_speed"][self.index_wind_timeseries]-self.wind_speed_avg)/self.wind_speed_std)**3 * oriented_angle(self.yaw_angle - self.wind_timeseries["wind_direction"][self.index_wind_timeseries:self.index_wind_timeseries+12].mean()) ** 2     \
                 + self.w2 * (self.step_since_last_2 > self.filter_duration and self.step_since_last_0 > self.filter_duration)
 
 

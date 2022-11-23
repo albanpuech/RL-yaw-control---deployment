@@ -7,8 +7,8 @@ from yaw_RL_module import *
 
     
 
-power_curve = pd.read_excel('power_curve.xlsx')
-dataset_file = 'steady_wind.csv'
+power_curve = pd.read_excel('assets/power_curve.xlsx')
+dataset_file = 'assets/steady_wind.csv'
 (wind_timeseries, wind_timeseries_not_agg) = get_dataset_from_simu(dataset_file,
                                                                    cycle_period=10,
                                                                    rolling_average_duration=20)
@@ -40,7 +40,7 @@ model_params = {
     'filter_duration': 1,
     'yaw_params': yaw_params,
     'ancestors': 12,
-    'training_steps': 250000
+    'training_steps': 300000
     }
 
 experiment = Experiment(api_key='GYoAMnAcbnbZ9p1PurkZCaSX0',
@@ -76,10 +76,10 @@ eval_env = YawEnv(
     yaw_params,
     )
  
-model = PPO('MlpPolicy', env, verbose=1)
+model = PPO('MlpPolicy', env, verbose=1, device = "cpu")
 
 eval_callback = EvalCallback(eval_env,
-                                 best_model_save_path='./{}'.format(name),
+                                 best_model_save_path='saved_models/{}'.format(name),
                                  eval_freq=20000, deterministic=True,
                                  render=False)
 
@@ -91,9 +91,9 @@ callback = CallbackList([logger_callback,eval_callback])
 
 model.learn(total_timesteps=model_params['training_steps'],callback=callback)
 
-model.save('steady_wind')
-model = PPO.load("{}/best_model.zip".format(name))
-# model = PPO.load('steady_wind')
+model.save("steady_model.zip")
+# model = PPO.load("saved_models/{}/best_model.zip".format(name))
+
 
 
 (res_model, nac_pos_model, power_improvement, power_control, power_simu) = test_model(
@@ -175,7 +175,7 @@ axs[5].tick_params(labelsize=20)
 axs[5].set_ylabel(ylabel='net power output \nincrease (per cent)', fontsize=20,)
 
 fig.tight_layout()
-plt.savefig('steady_results',dpi=600)
+plt.savefig('figures/steady_results',dpi=600)
 
     
 
@@ -190,10 +190,13 @@ axs[1].plot(range(model_params['start_index_test']*yaw_params['cycle_period'],mo
 plt.setp(axs[1], ylabel='wind speed (m/s)')
 plt.setp(axs[0], ylabel='wind direction (deg)')
 plt.legend()
-plt.savefig('steady_dataset',dpi=1000)
+plt.savefig('figures/steady_dataset',dpi=1000)
     
+print("\n\n----------------results of CYCA-S-------------")
 print(res_baseline_simu)
+print("\n\n----------------results of CYCA-L-------------")
 print(res_baseline_logs)
+print("\n\n----------------results of RLYCA--------------")
 print(res_model)
     
 
