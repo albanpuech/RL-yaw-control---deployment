@@ -40,7 +40,7 @@ model_params = {
     'filter_duration': 1,
     'yaw_params': yaw_params,
     'ancestors': 12,
-    'training_steps': 300000
+    'training_steps': 250000 # use 300000 if you use reward function weighted by wind speed
     }
 
 experiment = Experiment(api_key='GYoAMnAcbnbZ9p1PurkZCaSX0',
